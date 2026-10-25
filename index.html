@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#0f2a4a">
+<title>Absensi SDSL</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Absensi SDSL">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  :root{--navy:#0f2a4a;--navy2:#1b3f6b;--hijau:#14a05a;--oranye:#ef7d1a;--merah:#d64545;--abu:#f2f4f7;--teks:#1d2939;--redup:#667085;}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--abu);color:var(--teks);font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:16px}
+  .hidden{display:none!important}
+  .layar{max-width:480px;margin:0 auto;min-height:100vh;padding-bottom:28px}
+  .hero{background:linear-gradient(160deg,var(--navy),var(--navy2));color:#fff;text-align:center;padding:48px 20px 70px;border-radius:0 0 28px 28px}
+  .logo{width:76px;height:76px;border-radius:22px;background:#fff;color:var(--navy);font-weight:800;font-size:22px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+  .logo span{color:var(--oranye)}
+  .hero h1{margin:0;font-size:24px}
+  .hero p{margin:6px 0 0;opacity:.8;font-size:13px}
+  .kartu{background:#fff;border-radius:18px;margin:-44px 16px 0;padding:20px;box-shadow:0 4px 16px rgba(16,24,40,.08)}
+  .kartu+.kartu{margin-top:14px}
+  label{display:block;font-size:13px;color:var(--redup);margin:12px 0 6px;font-weight:600}
+  select,input[type=password],input[type=text]{width:100%;font-size:18px;padding:14px;border:1.5px solid #d0d5dd;border-radius:12px;background:#fff;color:var(--teks)}
+  select:focus,input:focus{outline:none;border-color:var(--navy2)}
+  label.cek{display:flex;align-items:center;gap:8px;font-weight:500;color:var(--teks);font-size:14px;margin-top:14px}
+  label.cek input{width:20px;height:20px}
+  .btn{display:block;width:100%;border:0;border-radius:14px;padding:16px;font-size:17px;font-weight:700;margin-top:18px;cursor:pointer}
+  .btn.utama{background:var(--navy);color:#fff}
+  .btn.hijau{background:var(--hijau);color:#fff}
+  .btn.garis{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn:disabled{opacity:.5}
+  .err{color:var(--merah);font-size:14px;min-height:18px;margin:12px 0 0;text-align:center}
+  .link-kecil{display:block;text-align:center;margin-top:22px;color:var(--redup);font-size:13px;text-decoration:underline;cursor:pointer}
+  /* layar utama */
+  .atas{background:linear-gradient(160deg,var(--navy),var(--navy2));color:#fff;padding:22px 20px 84px;border-radius:0 0 28px 28px;display:flex;justify-content:space-between;align-items:flex-start}
+  .halo{opacity:.75;font-size:13px}
+  .nm{font-size:21px;font-weight:700;margin-top:2px}
+  .sub{opacity:.8;font-size:13px;margin-top:3px}
+  .ikon{background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:10px;padding:8px 12px;font-size:13px;cursor:pointer}
+  .jamkartu{background:#fff;border-radius:20px;margin:-64px 16px 0;padding:18px 18px 16px;box-shadow:0 4px 16px rgba(16,24,40,.08);text-align:center}
+  .jam-besar{font-size:46px;font-weight:800;letter-spacing:1px;color:var(--navy);font-variant-numeric:tabular-nums}
+  .tgl{color:var(--redup);font-size:14px;margin-top:2px}
+  .status{display:flex;margin-top:14px;border-top:1px solid #eaecf0;padding-top:12px}
+  .status div{flex:1}
+  .status div+div{border-left:1px solid #eaecf0}
+  .status span{display:block;font-size:12px;color:var(--redup)}
+  .status b{font-size:22px;color:var(--teks)}
+  .lok{display:inline-block;margin-top:10px;font-size:12px;background:#eef4ff;color:var(--navy2);padding:4px 10px;border-radius:999px}
+  .tombol{display:flex;gap:12px;margin:16px}
+  .btn-absen{flex:1;border:0;border-radius:20px;padding:22px 8px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 6px 14px rgba(16,24,40,.15);display:flex;flex-direction:column;align-items:center;gap:8px}
+  .btn-absen svg{width:38px;height:38px}
+  .btn-absen.masuk{background:var(--hijau)}
+  .btn-absen.pulang{background:var(--oranye)}
+  .btn-absen:disabled{background:#c7ccd4;box-shadow:none}
+  .btn-absen small{font-weight:500;font-size:12px;opacity:.9}
+  .riw{margin:0 16px;background:#fff;border-radius:18px;padding:16px;box-shadow:0 4px 16px rgba(16,24,40,.06)}
+  .riw h3{margin:0 0 8px;font-size:15px}
+  .baris{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid #f0f1f3;font-size:14px}
+  .baris:first-of-type{border-top:0}
+  .baris .t{color:var(--redup)}
+  .tag{font-size:11px;padding:2px 7px;border-radius:999px;margin-left:6px;font-weight:700}
+  .tag.telat{background:#fdecec;color:var(--merah)}
+  .tag.ok{background:#e7f6ee;color:var(--hijau)}
+  .kosong{color:var(--redup);font-size:14px;padding:8px 0}
+  /* overlay */
+  .ovl{position:fixed;inset:0;background:rgba(15,42,74,.55);display:flex;align-items:flex-end;justify-content:center;z-index:9}
+  .ovl-box{background:#fff;width:100%;max-width:480px;border-radius:24px 24px 0 0;padding:26px 20px 30px;text-align:center;animation:naik .2s ease-out}
+  @keyframes naik{from{transform:translateY(40px);opacity:.5}to{transform:none;opacity:1}}
+  .ovl-box h2{margin:10px 0 6px;font-size:21px}
+  .ovl-box p{color:var(--redup);margin:6px 0;font-size:15px;line-height:1.45}
+  .bulat{width:76px;height:76px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center}
+  .bulat svg{width:42px;height:42px}
+  .bulat.ok{background:#e7f6ee;color:var(--hijau)}
+  .bulat.gagal{background:#fdecec;color:var(--merah)}
+  .bulat.info{background:#eef4ff;color:var(--navy2)}
+  .putar{width:54px;height:54px;border:5px solid #e4e7ec;border-top-color:var(--navy2);border-radius:50%;margin:8px auto;animation:putar 1s linear infinite}
+  @keyframes putar{to{transform:rotate(360deg)}}
+  .prev{width:180px;height:180px;object-fit:cover;border-radius:18px;margin:10px auto 4px;display:block;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+  .besar{font-size:40px;font-weight:800;color:var(--navy);margin:4px 0}
+  .admin-lok{border:1px solid #eaecf0;border-radius:14px;padding:14px;margin-top:12px;text-align:left}
+  .admin-lok b{display:block}
+  .admin-lok .t{font-size:13px;color:var(--redup);margin-top:4px}
+  .admin-lok .btn{margin-top:10px;padding:12px;font-size:15px}
+  .judul-admin{background:linear-gradient(160deg,var(--navy),var(--navy2));color:#fff;padding:22px 20px 70px;border-radius:0 0 28px 28px;display:flex;justify-content:space-between;align-items:center}
+  .judul-admin h2{margin:0;font-size:20px}
+  .ovl-box{max-height:88vh;overflow-y:auto}
+  .langkah{text-align:left;color:var(--teks);font-size:15px;line-height:1.5;padding-left:22px;margin:10px 0}
+  .langkah li{margin-bottom:6px}
+  .kutip{background:#eef4ff;border-radius:12px;padding:10px;color:var(--navy)!important;font-weight:700}
+  .pasang{margin:0 16px 16px;background:#fff7ed;border:1.5px solid #fbd5a8;border-radius:18px;padding:14px 16px}
+  .pasang b{color:#9a4b07}
+  .pasang .langkah{font-size:14px}
+  .pasang .btn{margin-top:8px;padding:11px;font-size:14px}
+</style>
+</head>
+<body>
+
+<!-- ===================== LAYAR LOGIN ===================== -->
+<section id="sLogin" class="layar">
+  <div class="hero">
+    <div class="logo">SD<span>SL</span></div>
+    <h1>Absensi Karyawan</h1>
+    <p>PT Sumber Damai Sejahtera Logistik</p>
+  </div>
+  <div class="kartu">
+    <label for="pilNama">Nama karyawan</label>
+    <select id="pilNama"><option value="">Memuat daftar nama...</option></select>
+    <label for="pin">PIN</label>
+    <input id="pin" type="password" inputmode="numeric" maxlength="6" placeholder="Masukkan PIN" autocomplete="off">
+    <label class="cek"><input type="checkbox" id="ingat" checked> Ingat saya di HP ini</label>
+    <button class="btn utama" id="btnLogin">MASUK</button>
+    <p class="err" id="errLogin"></p>
+  </div>
+  <div class="kartu hidden" id="kartuInstal">
+    <b>Pasang aplikasi di HP</b>
+    <p style="font-size:14px;margin:6px 0 0;color:var(--redup)">Tekan tombol di bawah, lalu pilih <b>Instal</b>. Ikon <b>Absensi SDSL</b> akan muncul di daftar aplikasi HP seperti aplikasi dari Play Store.</p>
+    <button class="btn hijau" id="btnInstal">INSTAL APLIKASI</button>
+  </div>
+  <a class="link-kecil" id="keAdmin">Menu Admin</a>
+</section>
+
+<!-- ===================== LAYAR UTAMA ===================== -->
+<section id="sUtama" class="layar hidden">
+  <header class="atas">
+    <div>
+      <div class="halo">Selamat bekerja,</div>
+      <div class="nm" id="nmUser">-</div>
+      <div class="sub" id="subUser">-</div>
+    </div>
+    <button class="ikon" id="btnKeluar">Keluar</button>
+  </header>
+  <div class="jamkartu">
+    <div class="jam-besar" id="jam">--:--</div>
+    <div class="tgl" id="tgl">-</div>
+    <div class="status">
+      <div><span>Jam Masuk</span><b id="stMasuk">--:--</b></div>
+      <div><span>Jam Pulang</span><b id="stPulang">--:--</b></div>
+    </div>
+    <div class="lok" id="lokInfo">-</div>
+  </div>
+  <div class="tombol">
+    <button class="btn-absen masuk" id="btnMasuk">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      ABSEN MASUK<small id="ketMasuk">Tekan saat tiba</small>
+    </button>
+    <button class="btn-absen pulang" id="btnPulang">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      ABSEN PULANG<small id="ketPulang">Tekan saat selesai</small>
+    </button>
+  </div>
+  <div class="pasang hidden" id="kartuPasang">
+    <b>Pasang di layar utama HP</b>
+    <div id="isiPasang"></div>
+    <button class="btn garis" id="btnPasangOk">SUDAH / MENGERTI</button>
+  </div>
+  <div class="riw">
+    <h3>Riwayat 7 hari terakhir</h3>
+    <div id="riwayat"><div class="kosong">Belum ada data.</div></div>
+  </div>
+</section>
+
+<!-- ===================== LAYAR ADMIN ===================== -->
+<section id="sAdmin" class="layar hidden">
+  <div class="judul-admin"><h2>Menu Admin</h2><button class="ikon" id="btnAdminTutup">Tutup</button></div>
+  <div class="kartu" id="adminLogin">
+    <label for="pinAdmin">PIN Admin</label>
+    <input id="pinAdmin" type="password" inputmode="numeric" maxlength="8" placeholder="PIN admin">
+    <button class="btn utama" id="btnAdminMasuk">BUKA MENU ADMIN</button>
+    <p class="err" id="errAdmin"></p>
+  </div>
+  <div id="adminIsi" class="hidden">
+    <div class="kartu">
+      <h3 style="margin:0">Titik lokasi kerja</h3>
+      <p class="t" style="color:var(--redup);font-size:13px;margin:6px 0 0">Berdiri di tengah area kantor/gudang, lalu tekan tombol lokasi yang sesuai.</p>
+      <div id="adminLokasi"></div>
+    </div>
+    <div class="kartu">
+      <h3 style="margin:0 0 6px">Kehadiran hari ini</h3>
+      <div id="adminHadir"></div>
+    </div>
+  </div>
+</section>
+
+<div id="ovl" class="ovl hidden"><div class="ovl-box" id="ovlBox"></div></div>
+<input type="file" id="kamera" accept="image/*" capture="user" class="hidden">
+
+<script>
+var IKON = {
+  ok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  gagal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  kamera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+  lokasi: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
+};
+var S = { id: '', pin: '', profil: null, jenis: '', pos: null, foto: '', pinAdmin: '', offset: null, lokTeks: '' };
+
+/* ---------- koneksi ke server (POST tanpa cookie, aman di iPhone & multi-akun) ---------- */
+var EXEC_URL = 'https://script.google.com/macros/s/AKfycbxuPkZI0w9ES5qPgYtfOvPehvqPanx2l7ZC4kXLHnmI4kvvnPmhqSTM7P8R5Mhu_fdP/exec';
+function api(fn, args, ok, gagalFn){
+  var selesai = false;
+  var t = setTimeout(function(){ if(!selesai){ selesai = true; gagalFn(new Error('Koneksi lambat atau terputus. Periksa internet lalu coba lagi.')); } }, 45000);
+  fetch(EXEC_URL, { method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }) })
+    .then(function(r){ return r.json(); })
+    .then(function(j){ if (selesai) return; selesai = true; clearTimeout(t); if (j.ok) ok(j.data); else gagalFn(new Error(j.error)); })
+    .catch(function(e){ if (selesai) return; selesai = true; clearTimeout(t); gagalFn(new Error('Gagal terhubung ke server. Periksa internet lalu coba lagi.')); });
+}
+function server(){
+  var ok = function(){}, fail = function(){};
+  var o = { withSuccessHandler: function(f){ ok = f; return o; }, withFailureHandler: function(f){ fail = f; return o; } };
+  ['daftarKaryawan','login','absen','adminData','adminSetLokasi','waktu'].forEach(function(fn){
+    o[fn] = function(){ api(fn, Array.prototype.slice.call(arguments), ok, fail); };
+  });
+  return o;
+}
+
+function $(id){ return document.getElementById(id); }
+function tampilLayar(id){ ['sLogin','sUtama','sAdmin'].forEach(function(x){ $(x).classList.toggle('hidden', x !== id); }); window.scrollTo(0,0); }
+function simpan(k,v){ try{ if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){} }
+function ambil(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function esc(t){ return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+function overlay(html){ $('ovlBox').innerHTML = html; $('ovl').classList.remove('hidden'); }
+function tutupOverlay(){ $('ovl').classList.add('hidden'); }
+function loading(teks){ overlay('<div class="putar"></div><h2>'+esc(teks)+'</h2><p>Mohon tunggu sebentar...</p>'); }
+function gagal(judul, pesan, tombolUlang){
+  overlay('<div class="bulat gagal">'+IKON.gagal+'</div><h2>'+esc(judul)+'</h2><p>'+esc(pesan)+'</p>' +
+    (tombolUlang ? '<button class="btn utama" onclick="'+tombolUlang+'">COBA LAGI</button>' : '') +
+    '<button class="btn garis" onclick="tutupOverlay()">TUTUP</button>');
+}
+function pesanError(e){ return (e && e.message) ? e.message.replace(/^Error:\s*/,'') : String(e); }
+
+/* ---------- jam server (cap waktu tidak tergantung jam HP) ---------- */
+function sinkronJam(cb){
+  var t0 = Date.now();
+  server().withSuccessHandler(function(r){
+    var t1 = Date.now(); S.offset = r.ms - Math.round((t0 + t1) / 2); if (cb) cb();
+  }).withFailureHandler(function(){ if (cb) cb(); }).waktu();
+}
+function sekarang(){ return new Date(Date.now() + (S.offset || 0)); }
+function bagianWIB(d){
+  var o = {}; try {
+    new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+      .formatToParts(d).forEach(function(p){ o[p.type] = p.value; });
+  } catch (e) {}
+  if (!o.year){ var p = function(n){ return ('0'+n).slice(-2); }; o = { weekday: '', day: p(d.getDate()), month: p(d.getMonth()+1), year: d.getFullYear(), hour: p(d.getHours()), minute: p(d.getMinutes()), second: p(d.getSeconds()) }; }
+  if (o.hour === '24') o.hour = '00';
+  return o;
+}
+
+/* ---------- jam berjalan ---------- */
+function tick(){
+  var d = sekarang(), b = bagianWIB(d);
+  $('jam').textContent = b.hour+':'+b.minute+':'+b.second;
+  try { $('tgl').textContent = d.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'Asia/Jakarta'}); }
+  catch (e) { $('tgl').textContent = d.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }
+}
+setInterval(tick, 1000); tick(); sinkronJam(tick);
+
+/* ---------- login ---------- */
+function muatNama(){
+  server().withSuccessHandler(function(daftar){
+    var h = '<option value="">-- Pilih nama Anda --</option>', grup = null;
+    daftar.forEach(function(k){
+      if (k.divisi !== grup){ if (grup !== null) h += '</optgroup>'; grup = k.divisi; h += '<optgroup label="'+esc(grup)+'">'; }
+      h += '<option value="'+esc(k.id)+'">'+esc(k.nama)+' ('+esc(k.jabatan)+')</option>';
+    });
+    if (grup !== null) h += '</optgroup>';
+    $('pilNama').innerHTML = h;
+    var simpanId = ambil('absen_id'); if (simpanId) $('pilNama').value = simpanId;
+  }).withFailureHandler(function(e){
+    $('pilNama').innerHTML = '<option value="">Daftar nama gagal dimuat</option>';
+    $('errLogin').innerHTML = esc(pesanError(e)) + '<br><a href="#" onclick="muatNama();return false;">Coba muat ulang</a>';
+  }).daftarKaryawan();
+}
+function login(id, pin, diam){
+  if (!id || !pin){ $('errLogin').textContent = 'Pilih nama dan isi PIN.'; return; }
+  if (!diam) loading('Membuka...');
+  server().withSuccessHandler(function(p){
+    tutupOverlay();
+    S.id = id; S.pin = pin; S.profil = p;
+    if ($('ingat').checked){ simpan('absen_id', id); simpan('absen_pin', pin); }
+    isiUtama(p); tampilLayar('sUtama');
+  }).withFailureHandler(function(e){
+    tutupOverlay(); simpan('absen_pin', null);
+    $('errLogin').textContent = pesanError(e); tampilLayar('sLogin');
+  }).login(id, pin);
+}
+$('btnLogin').onclick = function(){ $('errLogin').textContent=''; login($('pilNama').value, $('pin').value.trim()); };
+$('pin').addEventListener('keydown', function(e){ if(e.key==='Enter') $('btnLogin').click(); });
+$('btnKeluar').onclick = function(){ simpan('absen_pin', null); S.pin=''; $('pin').value=''; tampilLayar('sLogin'); };
+
+function isiUtama(p){
+  $('nmUser').textContent = p.nama;
+  $('subUser').textContent = (p.divisi ? p.divisi + ' • ' : '') + p.jabatan + ' • ID ' + p.id;
+  $('lokInfo').textContent = p.lokasi.nama + (!p.lokasi.bebas && !p.lokasi.titik.length ? ' (titik belum diatur admin)' : '');
+  $('stMasuk').textContent = p.status.masuk || '--:--';
+  $('stPulang').textContent = p.status.pulang || '--:--';
+  var terbuka = p.status.terbuka;
+  $('btnMasuk').disabled = terbuka;
+  $('btnPulang').disabled = !terbuka;
+  $('ketMasuk').textContent = terbuka ? 'Sudah absen ' + p.status.masuk : 'Tekan saat tiba';
+  $('ketPulang').textContent = terbuka ? 'Tekan saat selesai' : 'Absen masuk dulu';
+  var h = '';
+  (p.riwayat || []).forEach(function(r){
+    h += '<div class="baris"><span>'+esc(r.tanggal)+'</span><span><span class="t">'+esc(r.masuk)+' – '+esc(r.pulang||'..:..')+'</span>' +
+      (r.telat>0 ? '<span class="tag telat">Telat '+r.telat+'m</span>' : '<span class="tag ok">Tepat</span>') + '</span></div>';
+  });
+  $('riwayat').innerHTML = h || '<div class="kosong">Belum ada data.</div>';
+  tampilPasang();
+}
+
+/* ---------- alur absen ---------- */
+function jarakM(a,b,c,d){ var R=6371000,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r; var h=Math.sin(x/2)*Math.sin(x/2)+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)*Math.sin(y/2); return 2*R*Math.asin(Math.sqrt(h)); }
+function fJarak(m){ return m>=1000 ? (m/1000).toFixed(1).replace('.',',')+' km' : Math.round(m)+' m'; }
+
+function jenisHP(){ var u = navigator.userAgent || ''; return /iPhone|iPad|iPod/i.test(u) ? 'ios' : (/Android/i.test(u) ? 'android' : 'lain'); }
+function langkahIzin(kode){
+  var hp = jenisHP();
+  if (kode === 1){
+    if (hp === 'ios') return '<ol class="langkah"><li>Buka <b>Settings</b> iPhone &rarr; <b>Privacy &amp; Security</b> &rarr; <b>Location Services</b> (aktifkan).</li><li>Gulir ke bawah &rarr; <b>Safari Websites</b> &rarr; pilih <b>While Using the App</b>.</li><li>Kembali ke halaman ini, tekan <b>COBA LAGI</b>, lalu pilih <b>Allow</b>.</li></ol>';
+    return '<ol class="langkah"><li>Ketuk ikon <b>gembok / setelan</b> di kiri kolom alamat Chrome.</li><li>Pilih <b>Izin</b> &rarr; <b>Lokasi</b> &rarr; <b>Izinkan</b>.</li><li>Tekan <b>COBA LAGI</b>.</li></ol><p style="font-size:13px">Jika tidak ada pilihan Lokasi: Setelan HP &rarr; Aplikasi &rarr; Chrome &rarr; Izin &rarr; Lokasi &rarr; <b>Izinkan hanya saat aplikasi digunakan</b>.</p>';
+  }
+  if (hp === 'ios') return '<ol class="langkah"><li>Pastikan <b>Location Services</b> menyala (Settings &rarr; Privacy &amp; Security).</li><li>Pindah ke area terbuka / dekat pintu.</li><li>Tekan <b>COBA LAGI</b>.</li></ol>';
+  return '<ol class="langkah"><li>Usap layar dari atas &rarr; nyalakan <b>Lokasi / GPS</b>.</li><li>Pindah ke area terbuka / dekat pintu.</li><li>Tekan <b>COBA LAGI</b>.</li></ol>';
+}
+function mulaiAbsen(jenis){
+  S.jenis = jenis; S.pos = null; S.foto = ''; S.lokTeks = ''; sinkronJam();
+  if (!navigator.geolocation){ gagalLokasi(2); return; }
+  if (ambil('izin_lokasi_ok') === '1'){ ambilLokasi(); return; }
+  var penjelasan = function(){
+    overlay('<div class="bulat info">'+IKON.lokasi+'</div><h2>Izinkan lokasi</h2><p>Untuk absen, aplikasi perlu mengecek lokasi Anda. Setelah tombol LANJUT ditekan, HP akan bertanya:</p><p class="kutip">Izinkan akses lokasi?</p><p>Pilih <b>IZINKAN / ALLOW</b>.</p>' +
+      '<button class="btn hijau" onclick="ambilLokasi()">LANJUT</button><button class="btn garis" onclick="tutupOverlay()">BATAL</button>');
+  };
+  try {
+    navigator.permissions.query({ name: 'geolocation' }).then(function(st){ if (st.state === 'granted') ambilLokasi(); else penjelasan(); }, penjelasan);
+  } catch (e) { penjelasan(); }
+}
+function ambilLokasi(){
+  overlay('<div class="bulat info">'+IKON.lokasi+'</div><div class="putar" style="width:34px;height:34px;border-width:4px"></div><h2>Mencari lokasi Anda...</h2><p>Jika muncul pertanyaan izin lokasi, pilih <b>Izinkan / Allow</b>.</p>');
+  navigator.geolocation.getCurrentPosition(function(pos){
+    simpan('izin_lokasi_ok', '1');
+    S.pos = { lat: pos.coords.latitude, lng: pos.coords.longitude, akurasi: Math.round(pos.coords.accuracy||0) };
+    var L = S.profil.lokasi, teksJarak = 'Lokasi Anda tercatat (karyawan lapangan).';
+    if (!L.bebas && L.titik.length){
+      var dk = null;
+      L.titik.forEach(function(t){ var j = jarakM(t.lat, t.lng, S.pos.lat, S.pos.lng); if (!dk || (j - t.radius) < (dk.j - dk.t.radius)) dk = { t: t, j: j }; });
+      if (dk.j > dk.t.radius + Math.min(S.pos.akurasi, 100)){
+        gagal('Di luar lokasi kerja', 'Posisi Anda sekitar '+fJarak(dk.j)+' dari '+dk.t.nama+'. Absen hanya bisa dilakukan di lokasi kerja (radius '+dk.t.radius+' m).', 'ambilLokasi()');
+        return;
+      }
+      teksJarak = 'Anda berada ' + fJarak(dk.j) + ' dari ' + dk.t.nama + '.';
+      S.lokTeks = fJarak(dk.j) + ' dari ' + dk.t.nama;
+    }
+    siapSelfie('Lokasi sesuai', teksJarak);
+  }, function(err){ gagalLokasi(err.code); }, { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 });
+}
+function gagalLokasi(kode){
+  if (kode === 1) simpan('izin_lokasi_ok', null);
+  var h = '<div class="bulat gagal">'+IKON.gagal+'</div><h2>'+(kode === 1 ? 'Izin lokasi belum diberikan' : 'GPS belum terbaca')+'</h2>' + langkahIzin(kode) +
+    '<button class="btn utama" onclick="ambilLokasi()">COBA LAGI</button>';
+  if (S.profil && S.profil.lokasi.bebas){
+    h += '<button class="btn hijau" onclick="lanjutTanpaLokasi()">LANJUT TANPA LOKASI</button><p style="font-size:13px">Khusus karyawan lapangan: absen tetap tercatat dengan keterangan GPS tidak terbaca.</p>';
+  }
+  overlay(h + '<button class="btn garis" onclick="tutupOverlay()">TUTUP</button>');
+}
+function lanjutTanpaLokasi(){ S.pos = null; siapSelfie('Lanjut absen', 'GPS tidak terbaca. Absen dicatat tanpa lokasi.'); }
+function siapSelfie(judul, teks){
+  overlay('<div class="bulat ok">'+IKON.ok+'</div><h2>'+esc(judul)+'</h2><p>'+esc(teks)+'</p><p>Sekarang ambil <b>foto selfie</b> sebagai bukti absen <b>'+S.jenis+'</b>.</p>' +
+    '<button class="btn hijau" onclick="bukaKamera()">AMBIL FOTO SELFIE</button><button class="btn garis" onclick="tutupOverlay()">BATAL</button>');
+}
+/* ---------- pasang sebagai aplikasi (PWA) ---------- */
+var promptInstal = null;
+function modeAplikasi(){ return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true; }
+function instal(){
+  if (!promptInstal) return;
+  promptInstal.prompt();
+  promptInstal.userChoice.then(function(){ promptInstal = null; $('kartuInstal').classList.add('hidden'); tampilPasang(); });
+}
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault(); promptInstal = e;
+  if (!modeAplikasi()) $('kartuInstal').classList.remove('hidden');
+  if (S.profil) tampilPasang();
+});
+window.addEventListener('appinstalled', function(){
+  promptInstal = null; simpan('pasang_ok', '1');
+  $('kartuInstal').classList.add('hidden'); $('kartuPasang').classList.add('hidden');
+});
+$('btnInstal').onclick = instal;
+if ('serviceWorker' in navigator) { window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
+
+function tampilPasang(){
+  if (modeAplikasi() || ambil('pasang_ok') === '1'){ $('kartuPasang').classList.add('hidden'); return; }
+  var hp = jenisHP();
+  if (promptInstal){
+    $('isiPasang').innerHTML = '<p style="font-size:14px;margin:6px 0 0">Pasang absensi sebagai aplikasi supaya berikutnya cukup buka ikon <b>Absensi SDSL</b> di HP.</p><button class="btn hijau" onclick="instal()">INSTAL APLIKASI</button>';
+  } else {
+    $('isiPasang').innerHTML = hp === 'ios'
+      ? '<ol class="langkah"><li>Ketuk tombol <b>Bagikan</b> (kotak dengan panah ke atas) di Safari.</li><li>Pilih <b>Tambah ke Layar Utama</b> &rarr; <b>Tambah</b>.</li><li>Berikutnya cukup buka ikon <b>Absensi SDSL</b> di layar HP.</li></ol>'
+      : '<ol class="langkah"><li>Jika dibuka dari WhatsApp: ketuk &#8942; &rarr; <b>Buka di Chrome</b>.</li><li>Di Chrome ketuk &#8942; (kanan atas) &rarr; <b>Instal aplikasi</b> / <b>Tambahkan ke layar utama</b>.</li><li>Berikutnya cukup buka ikon <b>Absensi SDSL</b> di daftar aplikasi HP.</li></ol>';
+  }
+  $('kartuPasang').classList.remove('hidden');
+}
+$('btnPasangOk').onclick = function(){ simpan('pasang_ok', '1'); $('kartuPasang').classList.add('hidden'); };
+$('btnMasuk').onclick = function(){ mulaiAbsen('MASUK'); };
+$('btnPulang').onclick = function(){ mulaiAbsen('PULANG'); };
+
+function bukaKamera(){ $('kamera').value = ''; $('kamera').click(); }
+$('kamera').onchange = function(){
+  var f = this.files && this.files[0]; if (!f) return;
+  if (f.lastModified && (Date.now() - f.lastModified) > 5*60*1000){
+    gagal('Foto tidak valid', 'Foto harus diambil langsung dari kamera saat ini, bukan dari galeri.', 'bukaKamera()'); return;
+  }
+  loading('Memproses foto...');
+  var rd = new FileReader();
+  rd.onload = function(){
+    var img = new Image();
+    img.onload = function(){
+      var maks = 640, w = img.width, h = img.height, sk = Math.min(1, maks/Math.max(w,h));
+      var cv = document.createElement('canvas'); cv.width = Math.round(w*sk); cv.height = Math.round(h*sk);
+      var cx = cv.getContext('2d');
+      cx.drawImage(img, 0, 0, cv.width, cv.height);
+      capWaktu(cx, cv.width, cv.height);
+      S.foto = cv.toDataURL('image/jpeg', 0.75);
+      overlay('<h2>Foto selfie</h2><img class="prev" src="'+S.foto+'"><p>Pastikan wajah terlihat jelas.</p>' +
+        '<button class="btn hijau" onclick="kirimAbsen()">KIRIM ABSEN '+S.jenis+'</button><button class="btn garis" onclick="bukaKamera()">ULANGI FOTO</button>');
+    };
+    img.onerror = function(){ gagal('Foto gagal dibaca', 'Silakan ulangi foto.', 'bukaKamera()'); };
+    img.src = rd.result;
+  };
+  rd.readAsDataURL(f);
+};
+
+/* ---------- cap waktu di foto (seperti Timestamp Camera) ---------- */
+function capWaktu(cx, w, h){
+  var b = bagianWIB(sekarang()), p = S.profil || {};
+  var baris = [
+    'ABSEN ' + S.jenis + ' \u00b7 ' + (p.nama || '') + ' (' + (p.id || S.id) + ')',
+    (b.weekday ? b.weekday + ', ' : '') + b.day + '/' + b.month + '/' + b.year + ' \u00b7 ' + b.hour + ':' + b.minute + ':' + b.second + ' WIB' + (S.offset === null ? ' (jam HP)' : ''),
+    S.pos ? (S.pos.lat.toFixed(5) + ', ' + S.pos.lng.toFixed(5) + ' \u00b7 \u00b1' + S.pos.akurasi + ' m' + (S.lokTeks ? ' \u00b7 ' + S.lokTeks : '')) : 'GPS tidak terbaca',
+    'PT SDSL \u00b7 Absensi Karyawan'
+  ];
+  var fs = Math.max(12, Math.round(Math.min(w, h) / 30)), lh = Math.round(fs * 1.35), pad = Math.round(fs * 0.6);
+  var tinggi = lh * baris.length + pad * 2;
+  cx.fillStyle = 'rgba(0,0,0,0.55)'; cx.fillRect(0, h - tinggi, w, tinggi);
+  cx.textBaseline = 'top'; cx.fillStyle = '#ffffff';
+  baris.forEach(function(t, i){
+    cx.font = (i === 0 ? 'bold ' : '') + fs + 'px Arial, Helvetica, sans-serif';
+    while (cx.measureText(t).width > w - pad * 2 && t.length > 5) t = t.slice(0, -2) + '\u2026';
+    if (i === 0) cx.fillStyle = '#FFD54F'; else cx.fillStyle = '#ffffff';
+    cx.fillText(t, pad, h - tinggi + pad + i * lh);
+  });
+}
+
+function kirimAbsen(){
+  loading('Mengirim absen...');
+  server().withSuccessHandler(function(r){
+    var info = r.jenis === 'MASUK'
+      ? (r.telat > 0 ? '<p style="color:var(--merah);font-weight:700">Terlambat '+r.telat+' menit</p>' : '<p style="color:var(--hijau);font-weight:700">Tepat waktu. Selamat bekerja!</p>')
+      : '<p>Lama kerja: <b>'+esc(r.durasi)+'</b>. Terima kasih, hati-hati di jalan.</p>';
+    overlay('<div class="bulat ok">'+IKON.ok+'</div><h2>Absen '+r.jenis+' berhasil</h2><div class="besar">'+esc(r.jam)+'</div><p>'+esc(r.tanggal)+'</p>'+info+
+      '<button class="btn utama" onclick="selesai()">SELESAI</button>');
+  }).withFailureHandler(function(e){
+    gagal('Absen gagal', pesanError(e), 'kirimAbsen()');
+  }).absen({ id: S.id, pin: S.pin, jenis: S.jenis, lat: S.pos ? S.pos.lat : null, lng: S.pos ? S.pos.lng : null, akurasi: S.pos ? S.pos.akurasi : null, foto: S.foto, ua: navigator.userAgent });
+}
+function selesai(){ tutupOverlay(); login(S.id, S.pin, true); }
+
+/* ---------- admin ---------- */
+$('keAdmin').onclick = function(){ $('adminLogin').classList.remove('hidden'); $('adminIsi').classList.add('hidden'); $('errAdmin').textContent=''; tampilLayar('sAdmin'); };
+$('btnAdminTutup').onclick = function(){ S.pinAdmin=''; $('pinAdmin').value=''; tampilLayar(S.profil && S.pin ? 'sUtama' : 'sLogin'); };
+$('btnAdminMasuk').onclick = function(){ bukaAdmin($('pinAdmin').value.trim()); };
+function bukaAdmin(pin){
+  loading('Membuka menu admin...');
+  server().withSuccessHandler(function(d){
+    tutupOverlay(); S.pinAdmin = pin;
+    $('adminLogin').classList.add('hidden'); $('adminIsi').classList.remove('hidden');
+    var h = '';
+    d.lokasi.forEach(function(L){
+      h += '<div class="admin-lok"><b>'+esc(L.kode)+' – '+esc(L.nama)+'</b><div class="t">'+
+        (L.siap ? 'Titik: '+L.lat.toFixed(6)+', '+L.lng.toFixed(6)+' • radius '+L.radius+' m' : 'Titik BELUM diatur') +
+        '</div><button class="btn garis" onclick="setLokasi(\''+esc(L.kode)+'\')">JADIKAN POSISI SAYA SEBAGAI TITIK '+esc(L.kode)+'</button></div>';
+    });
+    $('adminLokasi').innerHTML = h;
+    var a = '';
+    d.hadir.forEach(function(k){
+      a += '<div class="baris"><span>'+esc(k.nama)+'<br><span class="t" style="font-size:12px">'+esc(k.divisi)+' • '+esc(k.jabatan)+' • '+esc(k.lokasi)+'</span></span><span class="t">'+
+        (k.masuk ? esc(k.masuk)+' – '+esc(k.pulang||'..:..') + (k.telat>0?'<span class="tag telat">'+k.telat+'m</span>':'') : '<span class="tag telat">Belum absen</span>')+'</span></div>';
+    });
+    $('adminHadir').innerHTML = a || '<div class="kosong">Belum ada karyawan aktif.</div>';
+  }).withFailureHandler(function(e){ tutupOverlay(); $('errAdmin').textContent = pesanError(e); }).adminData(pin);
+}
+function setLokasi(kode){
+  overlay('<div class="putar"></div><h2>Mengunci titik GPS...</h2><p>Berdiri diam di tengah area lokasi.</p>');
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var c = pos.coords, akur = Math.round(c.accuracy||0);
+    overlay('<div class="bulat info">'+IKON.lokasi+'</div><h2>Simpan titik '+esc(kode)+'?</h2><p>'+c.latitude.toFixed(6)+', '+c.longitude.toFixed(6)+'<br>Akurasi GPS: ±'+akur+' m</p>' +
+      (akur > 50 ? '<p style="color:var(--merah)">Akurasi kurang bagus. Sebaiknya coba lagi di area terbuka.</p>' : '') +
+      '<button class="btn hijau" onclick="simpanLokasi(\''+kode+'\','+c.latitude+','+c.longitude+')">SIMPAN TITIK INI</button>' +
+      '<button class="btn garis" onclick="setLokasi(\''+kode+'\')">AMBIL ULANG</button><button class="btn garis" onclick="tutupOverlay()">BATAL</button>');
+  }, function(){ gagal('Lokasi tidak terbaca','Pastikan GPS menyala dan izin lokasi diberikan.', "setLokasi('"+kode+"')"); },
+  { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 });
+}
+function simpanLokasi(kode, lat, lng){
+  loading('Menyimpan titik...');
+  server().withSuccessHandler(function(){
+    overlay('<div class="bulat ok">'+IKON.ok+'</div><h2>Titik '+esc(kode)+' tersimpan</h2><button class="btn utama" onclick="tutupOverlay();bukaAdmin(S.pinAdmin)">OK</button>');
+  }).withFailureHandler(function(e){ gagal('Gagal menyimpan', pesanError(e)); }).adminSetLokasi(S.pinAdmin, kode, lat, lng);
+}
+
+/* ---------- mulai ---------- */
+muatNama();
+(function(){
+  var id = ambil('absen_id'), pin = ambil('absen_pin');
+  if (id && pin){ S.id = id; login(id, pin); }
+})();
+</script>
+</body>
+</html>
