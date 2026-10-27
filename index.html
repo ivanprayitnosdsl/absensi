@@ -197,7 +197,7 @@ var IKON = {
   kamera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
   lokasi: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
 };
-var S = { id: '', pin: '', profil: null, jenis: '', pos: null, foto: '', pinAdmin: '', offset: null, lokTeks: '' };
+var S = { id: '', pin: '', profil: null, jenis: '', pos: null, foto: '', fotoGaleri: '', galeriOk: false, pinAdmin: '', offset: null, lokTeks: '' };
 
 /* ---------- koneksi ke server (POST tanpa cookie, aman di iPhone & multi-akun) ---------- */
 var EXEC_URL = 'https://script.google.com/macros/s/AKfycbxuPkZI0w9ES5qPgYtfOvPehvqPanx2l7ZC4kXLHnmI4kvvnPmhqSTM7P8R5Mhu_fdP/exec';
@@ -300,11 +300,12 @@ function isiUtama(p){
   $('lokInfo').textContent = p.lokasi.nama + (!p.lokasi.bebas && !p.lokasi.titik.length ? ' (titik belum diatur admin)' : '');
   $('stMasuk').textContent = p.status.masuk || '--:--';
   $('stPulang').textContent = p.status.pulang || '--:--';
-  var terbuka = p.status.terbuka;
-  $('btnMasuk').disabled = terbuka;
+  var terbuka = p.status.terbuka, kemarin = terbuka && p.status.dariKemarin;
+  if (kemarin){ $('stMasuk').textContent = '--:--'; }
+  $('btnMasuk').disabled = terbuka && !kemarin;
   $('btnPulang').disabled = !terbuka;
-  $('ketMasuk').textContent = terbuka ? 'Sudah absen ' + p.status.masuk : 'Tekan saat tiba';
-  $('ketPulang').textContent = terbuka ? 'Tekan saat selesai' : 'Absen masuk dulu';
+  $('ketMasuk').textContent = kemarin ? 'Tekan saat tiba' : (terbuka ? 'Sudah absen ' + p.status.masuk : 'Tekan saat tiba');
+  $('ketPulang').textContent = kemarin ? 'Shift ' + p.status.tglMasuk + ' belum ditutup' : (terbuka ? 'Tekan saat selesai' : 'Absen masuk dulu');
   var h = '';
   (p.riwayat || []).forEach(function(r){
     h += '<div class="baris"><span>'+esc(r.tanggal)+'</span><span><span class="t">'+esc(r.masuk)+' – '+esc(r.pulang||'..:..')+'</span>' +
@@ -407,7 +408,19 @@ function tampilPasang(){
 }
 $('btnPasangOk').onclick = function(){ simpan('pasang_ok', '1'); $('kartuPasang').classList.add('hidden'); };
 $('btnMasuk').onclick = function(){ mulaiAbsen('MASUK'); };
-$('btnPulang').onclick = function(){ mulaiAbsen('PULANG'); };
+$('btnPulang').onclick = function(){ konfirmasiPulang(); };
+/* konfirmasi sebelum absen PULANG supaya tidak salah pencet (masukan 27/10/2026) */
+function konfirmasiPulang(){
+  var st = (S.profil && S.profil.status) || {};
+  var kemarin = st.dariKemarin;
+  overlay('<div class="bulat info">'+IKON.lokasi+'</div><h2>Absen PULANG sekarang?</h2>' +
+    (kemarin
+      ? '<p>Absen MASUK terakhir Anda: <b>' + esc(st.tglMasuk) + ' pukul ' + esc(st.masuk) + '</b> dan belum absen PULANG.</p><p>Kalau Anda <b>baru tiba hari ini</b>, tekan <b>ABSEN MASUK HARI INI</b>.</p>'
+      : '<p>Absen MASUK tercatat pukul <b>' + esc(st.masuk) + '</b>. Tekan PULANG hanya jika pekerjaan hari ini sudah selesai.</p>') +
+    '<button class="btn hijau" onclick="tutupOverlay();mulaiAbsen(&#39;PULANG&#39;)">YA, ABSEN PULANG</button>' +
+    (kemarin ? '<button class="btn utama" onclick="tutupOverlay();mulaiAbsen(&#39;MASUK&#39;)">ABSEN MASUK HARI INI</button>' : '') +
+    '<button class="btn garis" onclick="tutupOverlay()">BATAL</button>');
+}
 
 function bukaKamera(){ $('kamera').value = ''; $('kamera').click(); }
 $('kamera').onchange = function(){
@@ -426,6 +439,7 @@ $('kamera').onchange = function(){
       cx.drawImage(img, 0, 0, cv.width, cv.height);
       capWaktu(cx, cv.width, cv.height);
       S.foto = cv.toDataURL('image/jpeg', 0.75);
+      S.fotoGaleri = fotoUntukGaleri(img); S.galeriOk = false;
       overlay('<h2>Foto selfie</h2><img class="prev" src="'+S.foto+'"><p>Pastikan wajah terlihat jelas.</p>' +
         '<button class="btn hijau" onclick="kirimAbsen()">KIRIM ABSEN '+S.jenis+'</button><button class="btn garis" onclick="bukaKamera()">ULANGI FOTO</button>');
     };
@@ -456,14 +470,68 @@ function capWaktu(cx, w, h){
   });
 }
 
+/* ---------- simpan foto absen ke galeri HP (masukan Pak Tardi 26/10/2026) ---------- */
+function fotoUntukGaleri(img){
+  try {
+    var maks = 1280, w = img.width, h = img.height, sk = Math.min(1, maks/Math.max(w,h));
+    var cv = document.createElement('canvas'); cv.width = Math.round(w*sk); cv.height = Math.round(h*sk);
+    var cx = cv.getContext('2d'); cx.drawImage(img, 0, 0, cv.width, cv.height);
+    capWaktu(cx, cv.width, cv.height);
+    return cv.toDataURL('image/jpeg', 0.85);
+  } catch (e) { return S.foto; }
+}
+function namaFileFoto(){
+  var b = bagianWIB(sekarang()), p = S.profil || {};
+  var nm = String(p.nama || S.id || 'Karyawan').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  return 'Absen_SDSL_' + S.jenis + '_' + nm + '_' + b.year + '-' + b.month + '-' + b.day + '_' + b.hour + b.minute + '.jpg';
+}
+function blobFoto(dataUrl){
+  var bin = atob(dataUrl.split(',')[1]), arr = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], { type: 'image/jpeg' });
+}
+function unduhFoto(){
+  var url = URL.createObjectURL(blobFoto(S.fotoGaleri || S.foto));
+  var a = document.createElement('a'); a.href = url; a.download = namaFileFoto();
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 60000);
+  S.galeriOk = true;
+}
+function simpanGaleri(){
+  var data = S.fotoGaleri || S.foto; if (!data) return;
+  if (jenisHP() === 'ios'){
+    try {
+      var file = new File([blobFoto(data)], namaFileFoto(), { type: 'image/jpeg' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })){
+        navigator.share({ files: [file] }).then(function(){ S.galeriOk = true; tandaGaleri(); }).catch(function(){});
+        return;
+      }
+    } catch (e) {}
+    overlay('<h2>Simpan foto</h2><img class="prev" src="'+data+'"><p>Tekan lama foto di atas, lalu pilih <b>Simpan ke Foto / Save to Photos</b>.</p><button class="btn utama" onclick="selesai()">SELESAI</button>');
+    return;
+  }
+  unduhFoto(); tandaGaleri();
+}
+function tandaGaleri(){
+  var el = $('ketGaleri'); if (!el) return;
+  el.innerHTML = S.galeriOk ? '&#10003; Foto absen tersimpan di <b>Galeri</b> HP (album <b>Download</b>).' : '';
+}
+function tombolGaleri(){
+  var ios = jenisHP() === 'ios';
+  return '<p id="ketGaleri" style="font-size:14px;color:var(--hijau);font-weight:600"></p>' +
+    '<button class="btn garis" onclick="simpanGaleri()">' + (ios ? 'SIMPAN FOTO KE GALERI' : (S.galeriOk ? 'SIMPAN ULANG FOTO KE GALERI' : 'SIMPAN FOTO KE GALERI')) + '</button>';
+}
+
 function kirimAbsen(){
+  if (jenisHP() !== 'ios' && !S.galeriOk){ try { unduhFoto(); } catch (e) {} }
   loading('Mengirim absen...');
   server().withSuccessHandler(function(r){
     var info = r.jenis === 'MASUK'
       ? (r.telat > 0 ? '<p style="color:var(--merah);font-weight:700">Terlambat '+r.telat+' menit</p>' : '<p style="color:var(--hijau);font-weight:700">Tepat waktu. Selamat bekerja!</p>')
       : '<p>Lama kerja: <b>'+esc(r.durasi)+'</b>. Terima kasih, hati-hati di jalan.</p>';
     overlay('<div class="bulat ok">'+IKON.ok+'</div><h2>Absen '+r.jenis+' berhasil</h2><div class="besar">'+esc(r.jam)+'</div><p>'+esc(r.tanggal)+'</p>'+info+
-      '<button class="btn utama" onclick="selesai()">SELESAI</button>');
+      tombolGaleri() + '<button class="btn utama" onclick="selesai()">SELESAI</button>');
+    tandaGaleri();
   }).withFailureHandler(function(e){
     gagal('Absen gagal', pesanError(e), 'kirimAbsen()');
   }).absen({ id: S.id, pin: S.pin, jenis: S.jenis, lat: S.pos ? S.pos.lat : null, lng: S.pos ? S.pos.lng : null, akurasi: S.pos ? S.pos.akurasi : null, foto: S.foto, ua: navigator.userAgent });
