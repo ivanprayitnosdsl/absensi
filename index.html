@@ -68,6 +68,16 @@
   .tag.telat{background:#fdecec;color:var(--merah)}
   .tag.ok{background:#e7f6ee;color:var(--hijau)}
   .kosong{color:var(--redup);font-size:14px;padding:8px 0}
+  .ringkas{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .ringkas div{background:#f6f8fb;border-radius:12px;padding:10px 12px}
+  .ringkas span{display:block;font-size:12px;color:var(--redup)}
+  .ringkas b{font-size:18px}
+  .logh{padding:12px 0;border-top:1px solid #f0f1f3}
+  .logh:first-of-type{border-top:0}
+  .logh .a{display:flex;justify-content:space-between;font-size:14px}
+  .logh .b{font-size:13px;color:var(--redup);margin-top:3px}
+  .tag.lupa{background:#fff4e5;color:#b45309}
+  .tag.jalan{background:#eef4ff;color:var(--navy2)}
   /* overlay */
   .ovl{position:fixed;inset:0;background:rgba(15,42,74,.55);display:flex;align-items:flex-end;justify-content:center;z-index:9}
   .ovl-box{background:#fff;width:100%;max-width:480px;border-radius:24px 24px 0 0;padding:26px 20px 30px;text-align:center;animation:naik .2s ease-out}
@@ -162,6 +172,21 @@
   <div class="riw">
     <h3>Riwayat 7 hari terakhir</h3>
     <div id="riwayat"><div class="kosong">Belum ada data.</div></div>
+    <button class="btn garis" id="btnLog">LOG ABSENSI SAYA</button>
+  </div>
+</section>
+
+<!-- ===================== LAYAR LOG ABSENSI ===================== -->
+<section id="sLog" class="layar hidden">
+  <div class="judul-admin"><h2>Log Absensi Saya</h2><button class="ikon" id="btnLogTutup">Kembali</button></div>
+  <div class="kartu">
+    <label for="pilBulan">Bulan</label>
+    <select id="pilBulan"></select>
+    <div class="ringkas" id="logRingkas"></div>
+  </div>
+  <div class="riw" style="margin-top:14px">
+    <h3 id="logJudul">Rincian per hari</h3>
+    <div id="logIsi"><div class="kosong">Memuat...</div></div>
   </div>
 </section>
 
@@ -212,14 +237,14 @@ function api(fn, args, ok, gagalFn){
 function server(){
   var ok = function(){}, fail = function(){};
   var o = { withSuccessHandler: function(f){ ok = f; return o; }, withFailureHandler: function(f){ fail = f; return o; } };
-  ['daftarKaryawan','login','absen','adminData','adminSetLokasi','waktu'].forEach(function(fn){
+  ['daftarKaryawan','login','absen','adminData','adminSetLokasi','waktu','logSaya'].forEach(function(fn){
     o[fn] = function(){ api(fn, Array.prototype.slice.call(arguments), ok, fail); };
   });
   return o;
 }
 
 function $(id){ return document.getElementById(id); }
-function tampilLayar(id){ ['sLogin','sUtama','sAdmin'].forEach(function(x){ $(x).classList.toggle('hidden', x !== id); }); window.scrollTo(0,0); }
+function tampilLayar(id){ ['sLogin','sUtama','sAdmin','sLog'].forEach(function(x){ $(x).classList.toggle('hidden', x !== id); }); window.scrollTo(0,0); }
 function simpan(k,v){ try{ if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){} }
 function ambil(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function esc(t){ return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
@@ -537,6 +562,37 @@ function kirimAbsen(){
   }).absen({ id: S.id, pin: S.pin, jenis: S.jenis, lat: S.pos ? S.pos.lat : null, lng: S.pos ? S.pos.lng : null, akurasi: S.pos ? S.pos.akurasi : null, foto: S.foto, ua: navigator.userAgent });
 }
 function selesai(){ tutupOverlay(); login(S.id, S.pin, true); }
+
+/* ---------- log absensi pribadi (v2.7 · 31/10/2026) ---------- */
+$('btnLog').onclick = function(){ bukaLog(''); };
+$('btnLogTutup').onclick = function(){ tampilLayar('sUtama'); };
+$('pilBulan').onchange = function(){ bukaLog(this.value); };
+function fMenit(m){ m = Math.round(m || 0); return Math.floor(m / 60) + ' jam ' + (m % 60) + ' mnt'; }
+function bukaLog(bulan){
+  tampilLayar('sLog');
+  $('logIsi').innerHTML = '<div class="kosong">Memuat...</div>'; $('logRingkas').innerHTML = '';
+  server().withSuccessHandler(function(d){
+    $('pilBulan').innerHTML = d.daftarBulan.map(function(b){ return '<option value="'+esc(b.kode)+'"'+(b.kode === d.bulan ? ' selected' : '')+'>'+esc(b.nama)+'</option>'; }).join('');
+    var r = d.ringkas;
+    $('logRingkas').innerHTML =
+      '<div><span>Hari hadir</span><b>'+r.hadir+' hari</b></div>' +
+      '<div><span>Total jam kerja</span><b>'+fMenit(r.totalMenit)+'</b></div>' +
+      '<div><span>Telat</span><b style="color:'+(r.telatKali ? 'var(--merah)' : 'var(--hijau)')+'">'+r.telatKali+'x'+(r.telatMenit ? ' ('+r.telatMenit+' mnt)' : '')+'</b></div>' +
+      '<div><span>Lupa absen pulang</span><b style="color:'+(r.lupaPulang ? '#b45309' : 'var(--hijau)')+'">'+r.lupaPulang+'x</b></div>';
+    $('logJudul').textContent = 'Rincian per hari · ' + d.namaBulan;
+    var h = '';
+    d.hari.forEach(function(x){
+      var tag = x.lupa ? '<span class="tag lupa">Lupa absen pulang</span>'
+        : (x.berjalan ? '<span class="tag jalan">Sedang bekerja</span>'
+        : (x.telat > 0 ? '<span class="tag telat">Telat '+x.telat+' mnt</span>' : (x.hitungTelat ? '<span class="tag ok">Tepat</span>' : '')));
+      h += '<div class="logh"><div class="a"><b>'+esc(x.tanggal)+'</b><span>'+tag+'</span></div>' +
+        '<div class="b">Masuk <b>'+esc(x.masuk)+'</b> &middot; Pulang <b>'+esc(x.pulang || '--:--')+'</b>' + (x.menit ? ' &middot; '+fMenit(x.menit) : '') + '</div></div>';
+    });
+    $('logIsi').innerHTML = h || '<div class="kosong">Belum ada absen di bulan ini.</div>';
+  }).withFailureHandler(function(e){
+    $('logIsi').innerHTML = '<div class="kosong">'+esc(pesanError(e))+'</div>';
+  }).logSaya(S.id, S.pin, bulan);
+}
 
 /* ---------- admin ---------- */
 $('keAdmin').onclick = function(){ $('adminLogin').classList.remove('hidden'); $('adminIsi').classList.add('hidden'); $('errAdmin').textContent=''; tampilLayar('sAdmin'); };
